@@ -1,7 +1,3 @@
-/** E
- * Created by X on 2016/10/8.
- */
-
 Tasks = new Mongo.Collection('tasks');
 
 if (Meteor.isClient) {
@@ -12,23 +8,37 @@ if (Meteor.isClient) {
   });
 
   Template.tasks.events({
-    "submit .add-task": function(event){
-      var name = event.target.name.value;
-      Tasks.insert({
-        name: name,
-        createdAt: new Date()
-      });
+    "submit .add-task": function(event) {
+      let name = event.target.name.value;
+      Meteor.call('addTask', name);
       event.target.name.value = '';
       return false;
     },
+
     "click .delete-task": function(event) {
-      if(confirm('Delete Task?')){
-        Tasks.remove(this._id);
+      if (confirm('Delete Task?')) {
+        Meteor.call('deleteTask', this._id);
       }
+      return false;
     }
-  });
+  })
 }
 
 if (Meteor.isServer) {
 
 }
+
+Meteor.methods({
+  addTask: function(name){
+    if (!Meteor.userId()) {
+      throw new Meteor.Error('No Access');
+    }
+    Tasks.insert({
+      name: name, createdAt: new Date(), userId: Meteor.userId()
+    });
+  },
+
+  deleteTask: function(taskId) {
+    Tasks.remove(taskId);
+  }
+})
